@@ -1,0 +1,5 @@
+--- expected (1 rows) ---
+9|29750750.0|33000000.0|3
+
+--- your output (0 rows) ---
+(empty)

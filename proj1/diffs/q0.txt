@@ -1,0 +1,5 @@
+--- expected (1 rows) ---
+189.0
+
+--- your output (1 rows) ---
+1

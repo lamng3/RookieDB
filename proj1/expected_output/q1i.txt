@@ -1,0 +1,3 @@
+Jumbo|Diaz|1984
+Eddie|Gaedel|1925
+Walter|Young|1980

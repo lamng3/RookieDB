@@ -1,0 +1,6 @@
+--- expected (2 rows) ---
+brownke01|Kevin|Brown|15714286.0|2000
+rodrial01|Alex|Rodriguez|22000000.0|2001
+
+--- your output (1 rows) ---
+NULL|NULL|NULL|NULL|NULL

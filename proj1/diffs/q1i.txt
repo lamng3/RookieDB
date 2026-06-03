@@ -1,0 +1,7 @@
+--- expected (3 rows) ---
+Jumbo|Diaz|1984
+Eddie|Gaedel|1925
+Walter|Young|1980
+
+--- your output (1 rows) ---
+NULL|NULL|NULL
