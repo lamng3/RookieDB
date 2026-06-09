@@ -94,9 +94,8 @@ class InnerNode extends BPlusNode {
     @Override
     public LeafNode getLeftmostLeaf() {
         assert(children.size() > 0);
-        // TODO(proj2): implement
-
-        return null;
+        BPlusNode childNode = getChild(0);
+        return childNode.getLeftmostLeaf();
     }
 
     // See BPlusNode.put.
