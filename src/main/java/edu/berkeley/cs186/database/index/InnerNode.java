@@ -1,5 +1,13 @@
 package edu.berkeley.cs186.database.index;
 
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
 import edu.berkeley.cs186.database.common.Buffer;
 import edu.berkeley.cs186.database.common.Pair;
 import edu.berkeley.cs186.database.concurrency.LockContext;
@@ -8,9 +16,6 @@ import edu.berkeley.cs186.database.databox.Type;
 import edu.berkeley.cs186.database.memory.BufferManager;
 import edu.berkeley.cs186.database.memory.Page;
 import edu.berkeley.cs186.database.table.RecordId;
-
-import java.nio.ByteBuffer;
-import java.util.*;
 
 /**
  * A inner node of a B+ tree. Every inner node in a B+ tree of order d stores
@@ -80,9 +85,9 @@ class InnerNode extends BPlusNode {
     // See BPlusNode.get.
     @Override
     public LeafNode get(DataBox key) {
-        // TODO(proj2): implement
-
-        return null;
+        int index = InnerNode.numLessThanEqual(key, keys);
+        BPlusNode childNode = getChild(index);
+        return childNode.get(key);
     }
 
     // See BPlusNode.getLeftmostLeaf.
