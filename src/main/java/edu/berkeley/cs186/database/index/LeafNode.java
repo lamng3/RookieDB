@@ -163,9 +163,41 @@ class LeafNode extends BPlusNode {
     // See BPlusNode.put.
     @Override
     public Optional<Pair<DataBox, Long>> put(DataBox key, RecordId rid) {
-        // TODO(proj2): implement
+        Optional<Pair<DataBox, Long>> result = Optional.empty();
 
-        return Optional.empty();
+        // check duplicate
+        if (keys.indexOf(key) != -1) {
+            throw new BPlusTreeException("Key already exists!");
+        }
+
+        // insert (key, rid)
+        int index = InnerNode.numLessThan(key, keys);
+        keys.add(index, key);
+        rids.add(index, rid);
+
+        // split
+        int order = metadata.getOrder();
+        if (keys.size() > 2 * order) {
+            List<DataBox> leftKeys = keys.subList(0, order);
+            List<DataBox> rightKeys = keys.subList(order, keys.size());
+
+            List<RecordId> leftRids = rids.subList(0, order);
+            List<RecordId> rightRids = rids.subList(order, rids.size());
+
+            LeafNode newRightLeafNode = new LeafNode(metadata, bufferManager, rightKeys, rightRids, rightSibling, treeContext);
+            DataBox splitKey = rightKeys.get(0);
+            Long rightNodePageNum = newRightLeafNode.getPage().getPageNum();
+
+            keys = new ArrayList<>(leftKeys);
+            rids = new ArrayList<>(leftRids);
+            this.rightSibling = Optional.of(rightNodePageNum);
+            
+            // update result
+            result = Optional.of(new Pair<>(splitKey, rightNodePageNum));
+        }
+
+        sync();
+        return result;
     }
 
     // See BPlusNode.bulkLoad.
