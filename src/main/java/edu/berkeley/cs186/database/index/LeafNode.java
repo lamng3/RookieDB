@@ -167,7 +167,7 @@ class LeafNode extends BPlusNode {
 
         // check duplicate
         if (keys.indexOf(key) != -1) {
-            throw new BPlusTreeException("Key already exists!");
+            throw new BPlusTreeException("Key already exists in leaf node!");
         }
 
         // insert (key, rid)

@@ -101,9 +101,48 @@ class InnerNode extends BPlusNode {
     // See BPlusNode.put.
     @Override
     public Optional<Pair<DataBox, Long>> put(DataBox key, RecordId rid) {
-        // TODO(proj2): implement
+        Optional<Pair<DataBox, Long>> result = Optional.empty();
 
-        return Optional.empty();
+        int index = InnerNode.numLessThanEqual(key, keys);
+        BPlusNode childNode = getChild(index);
+        
+        Optional<Pair<DataBox, Long>> response = childNode.put(key, rid);
+        if (!response.isPresent()) {
+            return Optional.empty();
+        }
+
+        DataBox childKey = response.get().getFirst();
+        Long childPageNum = response.get().getSecond();
+
+        // insert child key
+        keys.add(index, childKey);
+        children.add(index+1, childPageNum);
+
+        // split
+        int order = metadata.getOrder();
+
+        // 2d+1 keys overflow -> 2d+2 children (child pointers = keys + 1)
+        if (keys.size() > 2 * order) {
+            List<DataBox> leftKeys = keys.subList(0, order);
+            List<DataBox> rightKeys = keys.subList(order, keys.size());
+
+            List<Long> leftChildren = children.subList(0, order+1);
+            List<Long> rightChildren = children.subList(order+1, children.size());
+
+            DataBox splitKey = rightKeys.remove(0);
+
+            InnerNode newRightInnerNode = new InnerNode(metadata, bufferManager, rightKeys, rightChildren, treeContext);
+            Long rightNodePageNum = newRightInnerNode.getPage().getPageNum();
+
+            // update node
+            keys = new ArrayList<>(leftKeys);
+            children = new ArrayList<>(leftChildren);
+
+            result = Optional.of(new Pair<>(splitKey, rightNodePageNum));
+        }
+
+        sync();
+        return result;
     }
 
     // See BPlusNode.bulkLoad.
