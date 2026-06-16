@@ -193,12 +193,16 @@ public class TestBPlusTree {
             tree.put(new IntDataBox(i), new RecordId(i, (short) i));
         }
 
-        Iterator<RecordId> ge = tree.scanGreaterEqual(new IntDataBox(50));
-        for (int i = 50; i < n; ++i) {
-            assertTrue(ge.hasNext());
-            assertEquals(new RecordId(i, (short) i), ge.next());
+        // Start from EVERY key, so some start keys land mid-leaf (not just at a
+        // leaf boundary). scanGreaterEqual(k) must yield exactly k, k+1, ..., n-1.
+        for (int start = 0; start < n; ++start) {
+            Iterator<RecordId> ge = tree.scanGreaterEqual(new IntDataBox(start));
+            for (int i = start; i < n; ++i) {
+                assertTrue("missing element at start=" + start + " i=" + i, ge.hasNext());
+                assertEquals("wrong element at start=" + start, new RecordId(i, (short) i), ge.next());
+            }
+            assertFalse("extra elements at start=" + start, ge.hasNext());
         }
-        assertFalse(ge.hasNext());
     }
 
     @Test

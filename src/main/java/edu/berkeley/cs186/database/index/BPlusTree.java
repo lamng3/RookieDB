@@ -206,8 +206,8 @@ public class BPlusTree {
         // TODO(proj4_integration): Update the following line
         LockUtil.ensureSufficientLockHeld(lockContext, LockType.NL);
 
-        LeafNode leftmostNode = root.getLeftmostLeaf();
-        return new BPlusTreeIterator(Optional.of(leftmostNode));
+        LeafNode leftmost = root.getLeftmostLeaf();
+        return new BPlusTreeIterator(leftmost, leftmost.scanAll());
     }
 
     /**
@@ -238,9 +238,9 @@ public class BPlusTree {
         // TODO(proj4_integration): Update the following line
         LockUtil.ensureSufficientLockHeld(lockContext, LockType.NL);
 
-        // TODO(proj2): Return a BPlusTreeIterator.
-        LeafNode leftmostNode = root.getLeftmostLeaf();
-        return new BPlusTreeIterator(Optional.of(leftmostNode));
+        // Find correct node
+        LeafNode start = root.get(key);
+        return new BPlusTreeIterator(start, start.scanGreaterEqual(key));
     }
 
     /**
@@ -438,22 +438,25 @@ public class BPlusTree {
 
     // Iterator ////////////////////////////////////////////////////////////////
     private class BPlusTreeIterator implements Iterator<RecordId> {
-        Optional<LeafNode> leafNode;
-        Iterator<RecordId> ridIter;
+        LeafNode currentLeaf;
+        Iterator<RecordId> currentRids;
 
-        BPlusTreeIterator(Optional<LeafNode> _leafNode) {
-            leafNode = _leafNode;
-            ridIter = leafNode.get().scanAll();
+        BPlusTreeIterator(LeafNode startLeaf, Iterator<RecordId> startRids) {
+            currentLeaf = startLeaf;
+            currentRids = startRids;
         }
 
         @Override
         public boolean hasNext() {
-            while (!ridIter.hasNext()) {
-                leafNode = leafNode.get().getRightSibling();
-                if (leafNode.isEmpty()) return false;
-                ridIter = leafNode.get().scanAll();
+            while (!currentRids.hasNext()) {
+                Optional<LeafNode> sibling = currentLeaf.getRightSibling();
+                if (!sibling.isPresent()) {
+                    return false;
+                }
+                currentLeaf = sibling.get();
+                currentRids = currentLeaf.scanAll();
             }
-            return ridIter.hasNext();
+            return true;
         }
 
         @Override
@@ -461,7 +464,7 @@ public class BPlusTree {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            return ridIter.next();
+          return currentRids.next();
         }
     }
 }
