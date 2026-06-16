@@ -123,11 +123,11 @@ class InnerNode extends BPlusNode {
 
         // 2d+1 keys overflow -> 2d+2 children (child pointers = keys + 1)
         if (keys.size() > 2 * order) {
-            List<DataBox> leftKeys = keys.subList(0, order);
-            List<DataBox> rightKeys = keys.subList(order, keys.size());
+            List<DataBox> leftKeys = new ArrayList<>(keys.subList(0, order));
+            List<DataBox> rightKeys = new ArrayList<>(keys.subList(order, keys.size()));
 
-            List<Long> leftChildren = children.subList(0, order+1);
-            List<Long> rightChildren = children.subList(order+1, children.size());
+            List<Long> leftChildren = new ArrayList<>(children.subList(0, order+1));
+            List<Long> rightChildren = new ArrayList<>(children.subList(order+1, children.size()));
 
             DataBox splitKey = rightKeys.remove(0);
 
@@ -135,8 +135,8 @@ class InnerNode extends BPlusNode {
             Long rightNodePageNum = newRightInnerNode.getPage().getPageNum();
 
             // update node
-            keys = new ArrayList<>(leftKeys);
-            children = new ArrayList<>(leftChildren);
+            keys = leftKeys;
+            children = leftChildren;
 
             result = Optional.of(new Pair<>(splitKey, rightNodePageNum));
         }
