@@ -122,6 +122,44 @@ public class TestBPlusTree {
 
     @Test
     @Category(PublicTests.class)
+    public void testRemoveAndMissingKey() {
+        // Build a multi-level tree (order 2, 200 keys) so removes traverse
+        // inner nodes, then verify:
+        //   (1) removing a key that was never inserted is a no-op (no throw),
+        //   (2) removed keys are gone while untouched keys remain, and
+        //   (3) removing an already-removed key is also a harmless no-op.
+        BPlusTree tree = getBPlusTree(Type.intType(), 2);
+
+        int n = 200;
+        for (int i = 0; i < n; ++i) {
+            tree.put(new IntDataBox(i), new RecordId(i, (short) i));
+        }
+
+        // (1) Removing an absent key must not throw or disturb the tree.
+        tree.remove(new IntDataBox(10000));
+        for (int i = 0; i < n; ++i) {
+            assertEquals(Optional.of(new RecordId(i, (short) i)), tree.get(new IntDataBox(i)));
+        }
+
+        // (2) Remove all even keys.
+        for (int i = 0; i < n; i += 2) {
+            tree.remove(new IntDataBox(i));
+        }
+        for (int i = 0; i < n; ++i) {
+            Optional<RecordId> expected = (i % 2 == 0)
+                    ? Optional.empty()
+                    : Optional.of(new RecordId(i, (short) i));
+            assertEquals(expected, tree.get(new IntDataBox(i)));
+        }
+
+        // (3) Removing an already-removed key is a no-op.
+        tree.remove(new IntDataBox(0));
+        assertEquals(Optional.empty(), tree.get(new IntDataBox(0)));
+        assertEquals(Optional.of(new RecordId(1, (short) 1)), tree.get(new IntDataBox(1)));
+    }
+
+    @Test
+    @Category(PublicTests.class)
     public void testSimpleBulkLoad() {
         // Creates a B+ Tree with order 2, fillFactor 0.75 and attempts to bulk
         // load 11 values.
