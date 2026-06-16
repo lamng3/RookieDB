@@ -160,6 +160,49 @@ public class TestBPlusTree {
 
     @Test
     @Category(PublicTests.class)
+    public void testScanAll() {
+        // scanAll-only correctness test (laziness/I-O limits are checked by
+        // testRandomPuts via indexIteratorToList). Builds a multi-level tree
+        // and checks scanAll returns every rid in ascending key order.
+        BPlusTree tree = getBPlusTree(Type.intType(), 2);
+
+        // Empty tree: scanAll yields nothing.
+        assertFalse(tree.scanAll().hasNext());
+
+        int n = 100;
+        for (int i = 0; i < n; ++i) {
+            tree.put(new IntDataBox(i), new RecordId(i, (short) i));
+        }
+
+        Iterator<RecordId> all = tree.scanAll();
+        for (int i = 0; i < n; ++i) {
+            assertTrue(all.hasNext());
+            assertEquals(new RecordId(i, (short) i), all.next());
+        }
+        assertFalse(all.hasNext());
+    }
+
+    @Test
+    @Category(PublicTests.class)
+    public void testScanGreaterEqual() {
+        // scanGreaterEqual should start at `key`, skipping everything below it.
+        BPlusTree tree = getBPlusTree(Type.intType(), 2);
+
+        int n = 100;
+        for (int i = 0; i < n; ++i) {
+            tree.put(new IntDataBox(i), new RecordId(i, (short) i));
+        }
+
+        Iterator<RecordId> ge = tree.scanGreaterEqual(new IntDataBox(50));
+        for (int i = 50; i < n; ++i) {
+            assertTrue(ge.hasNext());
+            assertEquals(new RecordId(i, (short) i), ge.next());
+        }
+        assertFalse(ge.hasNext());
+    }
+
+    @Test
+    @Category(PublicTests.class)
     public void testSimpleBulkLoad() {
         // Creates a B+ Tree with order 2, fillFactor 0.75 and attempts to bulk
         // load 11 values.
