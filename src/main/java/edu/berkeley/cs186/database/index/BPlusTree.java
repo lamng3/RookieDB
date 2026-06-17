@@ -301,10 +301,39 @@ public class BPlusTree {
         // TODO(proj4_integration): Update the following line
         LockUtil.ensureSufficientLockHeld(lockContext, LockType.NL);
 
-        // TODO(proj2): implement
         // Note: You should NOT update the root variable directly.
         // Use the provided updateRoot() helper method to change
         // the tree's root if the old root splits.
+
+        // Check if tree is empty
+        boolean isEmptyTree = root.getLeftmostLeaf().getKeys().isEmpty();
+        if (!isEmptyTree) {
+            throw new BPlusTreeException("Tree is not empty at time of bulkLoad.");
+        }
+
+        // Check if data is deduped and in order
+        // Assuming that data is already deduped and in order
+        // Writing a verification check here would go against design. 
+        // We need to consume the iterator
+
+        while (data.hasNext()) {
+            Optional<Pair<DataBox, Long>> response = root.bulkLoad(data, fillFactor);
+
+            // Node is split
+            if (response.isPresent()) {
+                DataBox splitKey = response.get().getFirst();
+                Long newNodePageNum = response.get().getSecond();
+                Long oldRootPageNum = this.metadata.getRootPageNum();
+
+                // If split key present, root is split.
+                // Construct the new root.
+                List<DataBox> keys = new ArrayList<>(List.of(splitKey));
+                List<Long> children = new ArrayList<>(List.of(oldRootPageNum, newNodePageNum));
+
+                InnerNode newRootNode = new InnerNode(metadata, bufferManager, keys, children, lockContext);
+                this.updateRoot(newRootNode);
+            }
+        }
 
         return;
     }
